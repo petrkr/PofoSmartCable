@@ -1,0 +1,19 @@
+{
+  "name": "PofoSmartCable",
+  "version": "0.0.0-SNAPSHOT",
+  "description": "ESP32 Arduino library for the Atari Portfolio Smart Cable protocol.",
+  "keywords": "atari, portfolio, smartcable, serial, communication",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/petrkr/PofoSmartCable"
+  },
+  "authors": [
+    {
+      "name": "Petr Kracik",
+      "email": "petrkr@petrkr.net"
+    }
+  ],
+  "license": "MIT",
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}
