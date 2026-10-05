@@ -198,12 +198,12 @@ PofoFileTransfer::PofoFileTransfer(PofoSmartCable& cable) : cable_(cable) {
 PofoResult PofoFileTransfer::sendPathRequest(uint8_t function,
                                              const char* path) {
   if (path == 0) {
-    return PofoResult::FRAME_ERROR;
+    return PofoResult::INVALID_ARGUMENT;
   }
 
   const size_t pathLength = strlen(path);
   if (pathLength > 0xffffU - 4U) {
-    return PofoResult::FRAME_ERROR;
+    return PofoResult::INVALID_ARGUMENT;
   }
   const size_t requestLength = 4 + pathLength;
 
@@ -225,7 +225,7 @@ PofoResult PofoFileTransfer::sendPathRequest(uint8_t function,
 PofoResult PofoFileTransfer::list(const char* path,
                                   PofoFileTransferList* response) {
   if (response == 0) {
-    return PofoResult::FRAME_ERROR;
+    return PofoResult::INVALID_ARGUMENT;
   }
   response->clear();
 
@@ -246,7 +246,7 @@ PofoResult PofoFileTransfer::list(const char* path,
 PofoResult PofoFileTransfer::receiveFile(const char* path,
                                          PofoFileTransferFile* response) {
   if (response == 0) {
-    return PofoResult::FRAME_ERROR;
+    return PofoResult::INVALID_ARGUMENT;
   }
   response->clear();
 
@@ -314,12 +314,12 @@ PofoResult PofoFileTransfer::transmitFile(const char* path,
                                           size_t length, bool overwrite,
                                           time_t timestamp) {
   if (path == 0 || (data == 0 && length != 0) || length > 0xffffffUL) {
-    return PofoResult::FRAME_ERROR;
+    return PofoResult::INVALID_ARGUMENT;
   }
 
   const size_t pathLength = strlen(path);
   if (pathLength > 78) {
-    return PofoResult::FRAME_ERROR;
+    return PofoResult::INVALID_ARGUMENT;
   }
 
   // Exact 90-byte transmit init block from PortfolioESPlink. Unlike LIST,
