@@ -1,9 +1,52 @@
 #include "PofoSmartCableFrameServer.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "PofoSmartCableLog.h"
 #include "PofoSmartCablePhy.h"
+
+void logHexDump(const char* direction, const uint8_t* data, size_t length) {
+  PofoSmartCableComponentLogger& logger =
+      pofoSmartCableLogger("PofoSmartCableFrameServer");
+
+  char message[256];
+  size_t messageOffset = static_cast<size_t>(
+      snprintf(message, sizeof(message), "%s block: %lu bytes", direction,
+               static_cast<unsigned long>(length)));
+
+  for (size_t offset = 0; offset < length && messageOffset < sizeof(message);
+       offset += 16) {
+    // xxd groups bytes in pairs ("XXXX XXXX ..."), no space within a pair.
+    char hex[2 * 16 + 8 + 1];
+    char ascii[16 + 1];
+    const size_t rowLength = length - offset < 16 ? length - offset : 16;
+    size_t hexOffset = 0;
+    for (size_t index = 0; index < 16; ++index) {
+      if (index < rowLength) {
+        const uint8_t value = data[offset + index];
+        hexOffset += static_cast<size_t>(
+            snprintf(hex + hexOffset, 3, "%02x", value));
+        ascii[index] = (value >= 0x20 && value < 0x7f)
+            ? static_cast<char>(value)
+            : '.';
+      } else {
+        hexOffset += static_cast<size_t>(snprintf(hex + hexOffset, 3, "  "));
+      }
+      if (index % 2 == 1) {
+        hex[hexOffset++] = ' ';
+      }
+    }
+    hex[hexOffset] = 0;
+    ascii[rowLength] = 0;
+    messageOffset += static_cast<size_t>(
+        snprintf(message + messageOffset, sizeof(message) - messageOffset,
+                 "\r\n%08lx: %s %s", static_cast<unsigned long>(offset), hex,
+                 ascii));
+  }
+
+  logger.debugf("%s", message);
+}
 
 PofoResult PofoSmartCableFrameServer::waitZ(PofoSmartCablePhy& phy) {
   for (;;) {
@@ -83,9 +126,7 @@ PofoResult PofoSmartCableFrameServer::sendBlock(PofoSmartCablePhy& phy,
     return PofoResult::CHECKSUM_ERROR;
   }
 
-  PofoSmartCableComponentLogger& logger =
-      pofoSmartCableLogger("PofoSmartCableFrameServer");
-  logger.debugf("TX block: %lu bytes", static_cast<unsigned long>(length));
+  logHexDump("TX", data, length);
   return PofoResult::OK;
 }
 
@@ -163,8 +204,6 @@ PofoResult PofoSmartCableFrameServer::receiveBlock(PofoSmartCablePhy& phy,
   *payload = data;
   *lengthOut = length;
 
-  PofoSmartCableComponentLogger& logger =
-      pofoSmartCableLogger("PofoSmartCableFrameServer");
-  logger.debugf("RX block: %lu bytes", static_cast<unsigned long>(length));
+  logHexDump("RX", data, length);
   return PofoResult::OK;
 }

@@ -20,6 +20,7 @@ inline PofoSmartCableComponentLogger& pofoSmartCableLogger(const char* tag) {
 
 class PofoSmartCableNullLogger {
  public:
+  void verbosef(const char* format, ...) {}
   void debugf(const char* format, ...) {}
   void infof(const char* format, ...) {}
   void warnf(const char* format, ...) {}

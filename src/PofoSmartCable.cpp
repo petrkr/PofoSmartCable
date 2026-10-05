@@ -14,6 +14,10 @@ PofoResult PofoSmartCable::receiveByte(uint8_t* value) {
   return phy_.receiveByte(value);
 }
 
+PofoResult PofoSmartCable::sendByte(uint8_t value) {
+  return phy_.sendByte(value);
+}
+
 void PofoSmartCable::reset() {
   phy_.reset();
 }

@@ -54,7 +54,7 @@ PofoResult PofoSmartCablePhy::receiveByte(uint8_t* value) {
   *value = received;
   PofoSmartCableComponentLogger& logger =
       pofoSmartCableLogger("PofoSmartCablePhy");
-  logger.debugf("RX 0x%02X", received);
+  logger.verbosef("RX 0x%02X", received);
   return PofoResult::OK;
 }
 
@@ -88,7 +88,7 @@ PofoResult PofoSmartCablePhy::sendByte(uint8_t value) {
 
   PofoSmartCableComponentLogger& logger =
       pofoSmartCableLogger("PofoSmartCablePhy");
-  logger.debugf("TX 0x%02X", transmitted);
+  logger.verbosef("TX 0x%02X", transmitted);
   return PofoResult::OK;
 }
 
@@ -128,8 +128,7 @@ PofoResult PofoSmartCablePhy::waitClock(bool high) {
   const uint32_t startedAt = nowMicros();
   while (readClock() != high) {
     const uint32_t now = nowMicros();
-    if (static_cast<uint32_t>(now - startedAt) >
-        kHandshakeTimeoutUs) {
+    if (static_cast<uint32_t>(now - startedAt) > kHandshakeTimeoutUs) {
       return PofoResult::TIMEOUT;
     }
     idle();

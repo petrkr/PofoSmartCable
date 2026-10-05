@@ -13,6 +13,7 @@ class PofoSmartCable {
 
   // Temporary byte-level diagnostic API. Block framing will be the final API.
   PofoResult receiveByte(uint8_t* value);
+  PofoResult sendByte(uint8_t value);
 
   // Temporary synchronization diagnostic API. sendBlock() will use it later.
   PofoResult waitZ();
