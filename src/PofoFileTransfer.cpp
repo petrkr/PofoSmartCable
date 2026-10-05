@@ -341,16 +341,23 @@ PofoResult PofoFileTransfer::transmitFile(const char* path,
     return PofoResult::INVALID_ARGUMENT;
   }
 
-  // Exact 90-byte transmit init block from PortfolioESPlink. Unlike LIST,
-  // this request has a fixed 79-byte path field at offset 11.
-  uint8_t init[90] = {0x03, 0x00, 0x70, 0x0c, 0x7a, 0x21, 0x32};
+  const size_t initLength = 12 + pathLength;
+  uint8_t* init = static_cast<uint8_t*>(malloc(initLength));
+  if (init == 0) {
+    return PofoResult::OUT_OF_MEMORY;
+  }
+  memset(init, 0, initLength);
+  init[0] = 0x03;
+  init[1] = 0x00;
+  init[2] = 0x70;
   writeTimestamp(init, timestamp);
   init[7] = static_cast<uint8_t>(length);
   init[8] = static_cast<uint8_t>(length >> 8);
   init[9] = static_cast<uint8_t>(length >> 16);
   memcpy(init + 11, path, pathLength);
 
-  PofoResult result = cable_.sendBlock(init, sizeof(init));
+  PofoResult result = cable_.sendBlock(init, initLength);
+  free(init);
   if (result != PofoResult::OK) {
     return result;
   }
