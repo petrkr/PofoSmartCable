@@ -1,0 +1,23 @@
+# Compiled Object files
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Doxygen output
+docs/html/
+
+# Doxygen theme (downloaded for local builds)
+doxygen-awesome-css/
+
+# Generated host test source (regenerate with test/host/generate_compile_all.py)
+test/host/compile_all.generated.cpp
