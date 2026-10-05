@@ -115,33 +115,6 @@ void writeTimestamp(uint8_t* init, time_t timestamp) {
 
 }  // namespace
 
-PofoFileTransferFile::PofoFileTransferFile() : data_(0), length_(0) {
-}
-
-PofoFileTransferFile::~PofoFileTransferFile() {
-  clear();
-}
-
-const uint8_t* PofoFileTransferFile::data() const {
-  return data_;
-}
-
-size_t PofoFileTransferFile::length() const {
-  return length_;
-}
-
-void PofoFileTransferFile::clear() {
-  free(data_);
-  data_ = 0;
-  length_ = 0;
-}
-
-void PofoFileTransferFile::take(uint8_t* data, size_t length) {
-  clear();
-  data_ = data;
-  length_ = length;
-}
-
 PofoFileTransferList::PofoFileTransferList()
     : payload_(0), names_(0), count_(0) {
 }
@@ -264,13 +237,7 @@ PofoResult PofoFileTransfer::list(const char* path,
   return response->take(payload, length);
 }
 
-PofoResult PofoFileTransfer::receiveFile(const char* path,
-                                         PofoFileTransferFile* response) {
-  if (response == 0) {
-    return PofoResult::INVALID_ARGUMENT;
-  }
-  response->clear();
-
+PofoResult PofoFileTransfer::receiveFile(const char* path, Stream& output) {
   PofoResult result = sendPathRequest(0x02, path);
   if (result != PofoResult::OK) {
     return result;
@@ -292,49 +259,31 @@ PofoResult PofoFileTransfer::receiveFile(const char* path,
       (static_cast<size_t>(control[9]) << 16);
   PofoSmartCable::releaseBlock(control);
 
-  uint8_t* file = 0;
-  if (fileLength != 0) {
-    file = static_cast<uint8_t*>(malloc(fileLength));
-    if (file == 0) {
-      return PofoResult::OUT_OF_MEMORY;
-    }
-  }
-
   size_t offset = 0;
   while (offset < fileLength) {
     uint8_t* block = 0;
     size_t blockLength = 0;
     result = cable_.receiveBlock(&block, &blockLength);
     if (result != PofoResult::OK) {
-      free(file);
       return result;
     }
     if (blockLength == 0 || blockLength > fileLength - offset) {
       PofoSmartCable::releaseBlock(block);
-      free(file);
       return PofoResult::FRAME_ERROR;
     }
-    memcpy(file + offset, block, blockLength);
+    output.write(block, blockLength);
     offset += blockLength;
     PofoSmartCable::releaseBlock(block);
   }
 
   const uint8_t finish[] = {0x20, 0x00, 0x03};
-  result = cable_.sendBlock(finish, sizeof(finish));
-  if (result != PofoResult::OK) {
-    free(file);
-    return result;
-  }
-
-  response->take(file, fileLength);
-  return PofoResult::OK;
+  return cable_.sendBlock(finish, sizeof(finish));
 }
 
-PofoResult PofoFileTransfer::transmitFile(const char* path,
-                                          const uint8_t* data,
+PofoResult PofoFileTransfer::transmitFile(const char* path, Stream& input,
                                           size_t length, bool overwrite,
                                           time_t timestamp) {
-  if (path == 0 || (data == 0 && length != 0) || length > 0xffffffUL) {
+  if (path == 0 || length > 0xffffffUL) {
     return PofoResult::INVALID_ARGUMENT;
   }
 
@@ -399,22 +348,33 @@ PofoResult PofoFileTransfer::transmitFile(const char* path,
     return PofoResult::FRAME_ERROR;
   }
 
+  uint8_t* chunk = static_cast<uint8_t*>(malloc(blockSize));
+  if (chunk == 0) {
+    return PofoResult::OUT_OF_MEMORY;
+  }
+
   size_t offset = 0;
   while (offset < length) {
     size_t chunkLength = length - offset;
     if (chunkLength > blockSize) {
       chunkLength = blockSize;
     }
-    result = cable_.sendBlock(data + offset, chunkLength);
+    if (input.readBytes(chunk, chunkLength) != chunkLength) {
+      free(chunk);
+      return PofoResult::FRAME_ERROR;
+    }
+    result = cable_.sendBlock(chunk, chunkLength);
     if (result != PofoResult::OK) {
       pofoSmartCableLogger("PofoFileTransfer").warnf(
           "Transmit payload failed at %lu/%lu: %u",
           static_cast<unsigned long>(offset),
           static_cast<unsigned long>(length), static_cast<unsigned>(result));
+      free(chunk);
       return result;
     }
     offset += chunkLength;
   }
+  free(chunk);
 
   const uint32_t finalStatusStarted = micros();
   delayMicroseconds(kTransmitFinishDelayUs);
