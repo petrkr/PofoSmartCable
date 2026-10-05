@@ -6,6 +6,7 @@
 #include <Arduino.h>
 
 #include "PofoSmartCable.h"
+#include "PofoSmartCableLog.h"
 
 namespace {
 
@@ -50,6 +51,21 @@ void writeDosTime(uint8_t* init, unsigned year, unsigned month, unsigned day,
   init[6] = static_cast<uint8_t>(dosDate >> 8);
 }
 
+void logTimestamp(const char* source, const uint8_t* init) {
+  const uint16_t dosTime = static_cast<uint16_t>(init[3]) |
+      (static_cast<uint16_t>(init[4]) << 8);
+  const uint16_t dosDate = static_cast<uint16_t>(init[5]) |
+      (static_cast<uint16_t>(init[6]) << 8);
+  pofoSmartCableLogger("PofoFileTransfer").debugf(
+      "Timestamp %s: %04u-%02u-%02u %02u:%02u:%02u", source,
+      static_cast<unsigned>(1980 + (dosDate >> 9)),
+      static_cast<unsigned>((dosDate >> 5) & 0x0f),
+      static_cast<unsigned>(dosDate & 0x1f),
+      static_cast<unsigned>(dosTime >> 11),
+      static_cast<unsigned>((dosTime >> 5) & 0x3f),
+      static_cast<unsigned>((dosTime & 0x1f) * 2));
+}
+
 void writeFallbackDosTime(uint8_t* init) {
   uint32_t seconds = millis() / 1000UL;
   const unsigned monthDays[] = {31, 28, 31, 30, 31, 30,
@@ -79,6 +95,7 @@ void writeFallbackDosTime(uint8_t* init) {
 }
 
 void writeTimestamp(uint8_t* init, time_t timestamp) {
+  const bool supplied = timestamp != 0;
   if (timestamp == 0) {
     timestamp = time(0);
   }
@@ -87,9 +104,11 @@ void writeTimestamp(uint8_t* init, time_t timestamp) {
     writeDosTime(init, calendar->tm_year + 1900, calendar->tm_mon + 1,
                  calendar->tm_mday, calendar->tm_hour, calendar->tm_min,
                  calendar->tm_sec);
+    logTimestamp(supplied ? "argument" : "system", init);
     return;
   }
   writeFallbackDosTime(init);
+  logTimestamp("build date + millis", init);
 }
 
 }  // namespace
