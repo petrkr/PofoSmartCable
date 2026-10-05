@@ -30,6 +30,7 @@ class PofoSmartCablePhy {
 
  private:
   static const uint32_t kLinkTimeoutMs = 300;
+  static const uint32_t kHandshakeTimeoutUs = 2000000;
 
   PofoResult waitClock(bool high);
   void reportLinkState(bool isOnline) const;

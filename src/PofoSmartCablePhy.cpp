@@ -129,8 +129,8 @@ PofoResult PofoSmartCablePhy::waitClock(bool high) {
   while (readClock() != high) {
     const uint32_t now = nowMicros();
     if (static_cast<uint32_t>(now - startedAt) >
-        kLinkTimeoutMs * 1000U) {
-      return PofoResult::OFFLINE;
+        kHandshakeTimeoutUs) {
+      return PofoResult::TIMEOUT;
     }
     idle();
   }

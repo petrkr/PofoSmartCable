@@ -10,6 +10,8 @@
 
 namespace {
 
+const uint32_t kTransmitFinishDelayUs = 50000;
+
 bool isLeapYear(unsigned year) {
   return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
 }
@@ -405,20 +407,34 @@ PofoResult PofoFileTransfer::transmitFile(const char* path,
     }
     result = cable_.sendBlock(data + offset, chunkLength);
     if (result != PofoResult::OK) {
+      pofoSmartCableLogger("PofoFileTransfer").warnf(
+          "Transmit payload failed at %lu/%lu: %u",
+          static_cast<unsigned long>(offset),
+          static_cast<unsigned long>(length), static_cast<unsigned>(result));
       return result;
     }
     offset += chunkLength;
   }
 
-  delayMicroseconds(50000);
+  const uint32_t finalStatusStarted = micros();
+  delayMicroseconds(kTransmitFinishDelayUs);
 
   control = 0;
   controlLength = 0;
   result = cable_.receiveBlock(&control, &controlLength);
   if (result != PofoResult::OK) {
+    pofoSmartCableLogger("PofoFileTransfer").warnf(
+        "Transmit final status failed: %u", static_cast<unsigned>(result));
     return result;
   }
-  const bool complete = controlLength != 0 && control[0] == 0x20;
+  const uint8_t finalStatus = controlLength > 0 ? control[0] : 0xff;
+  const uint8_t detail = controlLength > 1 ? control[1] : 0xff;
+  const uint8_t extra = controlLength > 2 ? control[2] : 0xff;
+  const bool complete = finalStatus == 0x20;
   PofoSmartCable::releaseBlock(control);
+  pofoSmartCableLogger("PofoFileTransfer").infof(
+      "Transmit final status after %lu us: %02X %02X %02X",
+      static_cast<unsigned long>(micros() - finalStatusStarted), finalStatus,
+      detail, extra);
   return complete ? PofoResult::OK : PofoResult::REMOTE_ERROR;
 }
