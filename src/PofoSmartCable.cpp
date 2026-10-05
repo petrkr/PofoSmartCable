@@ -10,24 +10,17 @@ bool PofoSmartCable::online() const {
   return phy_.online();
 }
 
-PofoResult PofoSmartCable::receiveByte(uint8_t* value) {
-  return phy_.receiveByte(value);
+void PofoSmartCable::loop() {
+  phy_.online();
 }
 
-PofoResult PofoSmartCable::sendByte(uint8_t value) {
-  return phy_.sendByte(value);
+PofoResult PofoSmartCable::setLinkStateCallback(
+    PofoSmartCableLinkStateCallback callback) {
+  return phy_.setLinkStateCallback(callback);
 }
 
 void PofoSmartCable::reset() {
   phy_.reset();
-}
-
-PofoResult PofoSmartCable::syncTick() {
-  return phy_.syncTick();
-}
-
-PofoResult PofoSmartCable::waitZ() {
-  return frame_.waitZ(phy_);
 }
 
 PofoResult PofoSmartCable::setProgressCallback(PofoSmartCableProgress progress) {

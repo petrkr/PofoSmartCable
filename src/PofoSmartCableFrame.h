@@ -20,12 +20,13 @@ class PofoSmartCableFrame {
   // is non-zero - clear it first.
   PofoResult setProgressCallback(PofoSmartCableProgress progress);
 
-  PofoResult waitZ(PofoSmartCablePhy& phy);
   PofoResult sendBlock(PofoSmartCablePhy& phy, const uint8_t* data,
                        size_t length);
   PofoResult receiveBlock(PofoSmartCablePhy& phy, uint8_t** payload,
                           size_t* length);
 
  private:
+  PofoResult waitZ(PofoSmartCablePhy& phy);
+
   PofoSmartCableProgress progress_ = 0;
 };

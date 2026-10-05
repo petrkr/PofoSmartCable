@@ -2,6 +2,10 @@
 
 #include "PofoSmartCableResult.h"
 
+// Reports a link state transition (online() changed). Not called on every
+// online() poll - only when the state actually flips.
+typedef void (*PofoSmartCableLinkStateCallback)(bool isOnline);
+
 class PofoSmartCablePhy {
  public:
   PofoSmartCablePhy();
@@ -9,6 +13,13 @@ class PofoSmartCablePhy {
 
   bool begin(int clkIn, int dataIn, int clkOut, int dataOut);
   bool online() const;
+
+  // Registers a callback invoked when online() transitions between true
+  // and false. Pass 0 to clear it. Returns ALREADY_REGISTERED if a
+  // non-zero callback is already set and callback is also non-zero -
+  // clear it first.
+  PofoResult setLinkStateCallback(PofoSmartCableLinkStateCallback callback);
+
   PofoResult receiveByte(uint8_t* value);
   PofoResult sendByte(uint8_t value);
   PofoResult syncTick();
@@ -40,4 +51,5 @@ class PofoSmartCablePhy {
   bool initialized_;
   mutable bool lastReportedOnline_;
   mutable bool hasReportedLinkState_;
+  PofoSmartCableLinkStateCallback linkStateCallback_;
 };

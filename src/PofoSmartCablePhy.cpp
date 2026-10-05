@@ -7,7 +7,8 @@ PofoSmartCablePhy::PofoSmartCablePhy()
       clkChangeCount_(0),
       initialized_(false),
       lastReportedOnline_(false),
-      hasReportedLinkState_(false) {}
+      hasReportedLinkState_(false),
+      linkStateCallback_(0) {}
 
 PofoSmartCablePhy::~PofoSmartCablePhy() {}
 
@@ -27,6 +28,15 @@ bool PofoSmartCablePhy::online() const {
       static_cast<uint32_t>(now - lastChange) <= kLinkTimeoutMs * 1000U;
   reportLinkState(isOnline);
   return isOnline;
+}
+
+PofoResult PofoSmartCablePhy::setLinkStateCallback(
+    PofoSmartCableLinkStateCallback callback) {
+  if (callback != 0 && linkStateCallback_ != 0) {
+    return PofoResult::ALREADY_REGISTERED;
+  }
+  linkStateCallback_ = callback;
+  return PofoResult::OK;
 }
 
 PofoResult PofoSmartCablePhy::receiveByte(uint8_t* value) {
@@ -157,5 +167,8 @@ void PofoSmartCablePhy::reportLinkState(bool isOnline) const {
     logger.debugf("CLKIN inactive: age=%lu us, edges=%lu",
                  static_cast<unsigned long>(age),
                  static_cast<unsigned long>(clkChangeCount_));
+  }
+  if (linkStateCallback_ != 0) {
+    linkStateCallback_(isOnline);
   }
 }

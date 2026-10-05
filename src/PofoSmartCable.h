@@ -11,12 +11,16 @@ class PofoSmartCable {
   // True if CLKIN changed within the configured link timeout.
   bool online() const;
 
-  // Temporary byte-level diagnostic API. Block framing will be the final API.
-  PofoResult receiveByte(uint8_t* value);
-  PofoResult sendByte(uint8_t value);
+  // Call regularly (e.g. from the sketch's loop()) to have a registered
+  // link-state callback fire on transitions, independent of whether the
+  // application also calls online() itself.
+  void loop();
 
-  // Temporary synchronization diagnostic API. sendBlock() will use it later.
-  PofoResult waitZ();
+  // Registers a callback invoked when online() transitions between true
+  // and false. Pass 0 to clear it. Returns ALREADY_REGISTERED if a
+  // non-zero callback is already set and callback is also non-zero -
+  // clear it first.
+  PofoResult setLinkStateCallback(PofoSmartCableLinkStateCallback callback);
 
   // Registers a callback invoked after each byte sent/received inside
   // sendBlock()/receiveBlock(). Pass 0 to clear it. Returns
@@ -31,7 +35,6 @@ class PofoSmartCable {
   void reset();
 
  private:
-  PofoResult syncTick();
   PofoSmartCablePhyESP32 phy_;
   PofoSmartCableFrame frame_;
 };
