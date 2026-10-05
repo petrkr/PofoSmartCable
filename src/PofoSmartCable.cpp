@@ -21,18 +21,14 @@ PofoResult PofoSmartCable::syncTick() {
 }
 
 PofoResult PofoSmartCable::waitZ() {
-  for (;;) {
-    uint8_t value = 0;
-    PofoResult result = receiveByte(&value);
-    if (result != PofoResult::OK) {
-      return result;
-    }
-    if (value == 0x5A) {
-      return PofoResult::OK;
-    }
-    result = syncTick();
-    if (result != PofoResult::OK) {
-      return result;
-    }
-  }
+  return serverFrame_.waitZ(phy_);
+}
+
+PofoResult PofoSmartCable::sendBlock(const uint8_t* data, size_t length) {
+  return serverFrame_.sendBlock(phy_, data, length);
+}
+
+PofoResult PofoSmartCable::receiveBlock(uint8_t* data, size_t capacity,
+                                        size_t* receivedLength) {
+  return serverFrame_.receiveBlock(phy_, data, capacity, receivedLength);
 }

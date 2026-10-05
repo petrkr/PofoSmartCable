@@ -10,7 +10,9 @@ class PofoSmartCablePhy {
   bool begin(int clkIn, int dataIn, int clkOut, int dataOut);
   bool online() const;
   PofoResult receiveByte(uint8_t* value);
+  PofoResult sendByte(uint8_t value);
   PofoResult syncTick();
+  void delayMicros(uint32_t microseconds);
   void reset();
 
  protected:
@@ -23,6 +25,7 @@ class PofoSmartCablePhy {
   virtual bool readData() const = 0;
   virtual void writeClock(bool high) = 0;
   virtual void writeData(bool high) = 0;
+  virtual void platformDelayMicros(uint32_t microseconds) = 0;
   virtual void idle() = 0;
 
  private:

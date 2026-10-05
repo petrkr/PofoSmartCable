@@ -15,6 +15,7 @@ class PofoSmartCablePhyESP32 : public PofoSmartCablePhy {
   bool readData() const;
   void writeClock(bool high);
   void writeData(bool high);
+  void platformDelayMicros(uint32_t microseconds);
   void idle();
 
  private:

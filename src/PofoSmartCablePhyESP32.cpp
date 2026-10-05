@@ -51,6 +51,10 @@ void PofoSmartCablePhyESP32::writeData(bool high) {
   gpio_set_level(static_cast<gpio_num_t>(dataOut_), high ? 1 : 0);
 }
 
+void PofoSmartCablePhyESP32::platformDelayMicros(uint32_t microseconds) {
+  delayMicroseconds(microseconds);
+}
+
 void PofoSmartCablePhyESP32::idle() {
   yield();
 }

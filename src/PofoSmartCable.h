@@ -2,6 +2,7 @@
 
 #include "PofoSmartCablePhyESP32.h"
 #include "PofoSmartCableResult.h"
+#include "PofoSmartCableFrameServer.h"
 
 class PofoSmartCable {
  public:
@@ -16,9 +17,14 @@ class PofoSmartCable {
   // Temporary synchronization diagnostic API. sendBlock() will use it later.
   PofoResult waitZ();
 
+  PofoResult sendBlock(const uint8_t* data, size_t length);
+  PofoResult receiveBlock(uint8_t* data, size_t capacity,
+                          size_t* receivedLength);
+
   void reset();
 
  private:
   PofoResult syncTick();
   PofoSmartCablePhyESP32 phy_;
+  PofoSmartCableFrameServer serverFrame_;
 };

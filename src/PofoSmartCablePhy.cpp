@@ -58,6 +58,40 @@ PofoResult PofoSmartCablePhy::receiveByte(uint8_t* value) {
   return PofoResult::OK;
 }
 
+PofoResult PofoSmartCablePhy::sendByte(uint8_t value) {
+  if (!initialized_) {
+    return PofoResult::OFFLINE;
+  }
+
+  const uint8_t transmitted = value;
+  platformDelayMicros(250);
+  for (uint8_t pair = 0; pair < 4; ++pair) {
+    writeData((value & 0x80) != 0);
+    writeClock(true);
+    writeClock(false);
+    value <<= 1;
+
+    PofoResult result = waitClock(false);
+    if (result != PofoResult::OK) {
+      return result;
+    }
+
+    writeData((value & 0x80) != 0);
+    writeClock(true);
+    value <<= 1;
+
+    result = waitClock(true);
+    if (result != PofoResult::OK) {
+      return result;
+    }
+  }
+
+  PofoSmartCableComponentLogger& logger =
+      pofoSmartCableLogger("PofoSmartCablePhy");
+  logger.debugf("TX 0x%02X", transmitted);
+  return PofoResult::OK;
+}
+
 PofoResult PofoSmartCablePhy::syncTick() {
   PofoResult result = waitClock(false);
   if (result != PofoResult::OK) {
@@ -71,6 +105,10 @@ PofoResult PofoSmartCablePhy::syncTick() {
   }
   writeClock(true);
   return PofoResult::OK;
+}
+
+void PofoSmartCablePhy::delayMicros(uint32_t microseconds) {
+  platformDelayMicros(microseconds);
 }
 
 void PofoSmartCablePhy::reset() {
