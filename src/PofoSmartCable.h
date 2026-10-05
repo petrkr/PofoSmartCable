@@ -18,8 +18,8 @@ class PofoSmartCable {
   PofoResult waitZ();
 
   PofoResult sendBlock(const uint8_t* data, size_t length);
-  PofoResult receiveBlock(uint8_t* data, size_t capacity,
-                          size_t* receivedLength);
+  PofoResult receiveBlock(uint8_t** payload, size_t* length);
+  static void releaseBlock(uint8_t* payload);
 
   void reset();
 

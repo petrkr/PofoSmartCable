@@ -12,6 +12,6 @@ class PofoSmartCableFrameServer {
   PofoResult waitZ(PofoSmartCablePhy& phy);
   PofoResult sendBlock(PofoSmartCablePhy& phy, const uint8_t* data,
                        size_t length);
-  PofoResult receiveBlock(PofoSmartCablePhy& phy, uint8_t* data,
-                          size_t capacity, size_t* receivedLength);
+  PofoResult receiveBlock(PofoSmartCablePhy& phy, uint8_t** payload,
+                          size_t* length);
 };

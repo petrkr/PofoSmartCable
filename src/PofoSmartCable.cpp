@@ -1,5 +1,7 @@
 #include "PofoSmartCable.h"
 
+#include <stdlib.h>
+
 bool PofoSmartCable::begin(int clkIn, int dataIn, int clkOut, int dataOut) {
   return phy_.begin(clkIn, dataIn, clkOut, dataOut);
 }
@@ -28,7 +30,10 @@ PofoResult PofoSmartCable::sendBlock(const uint8_t* data, size_t length) {
   return serverFrame_.sendBlock(phy_, data, length);
 }
 
-PofoResult PofoSmartCable::receiveBlock(uint8_t* data, size_t capacity,
-                                        size_t* receivedLength) {
-  return serverFrame_.receiveBlock(phy_, data, capacity, receivedLength);
+PofoResult PofoSmartCable::receiveBlock(uint8_t** payload, size_t* length) {
+  return serverFrame_.receiveBlock(phy_, payload, length);
+}
+
+void PofoSmartCable::releaseBlock(uint8_t* payload) {
+  free(payload);
 }

@@ -1,5 +1,7 @@
 #include "PofoSmartCableFrameServer.h"
 
+#include <stdlib.h>
+
 #include "PofoSmartCableLog.h"
 #include "PofoSmartCablePhy.h"
 
@@ -81,15 +83,15 @@ PofoResult PofoSmartCableFrameServer::sendBlock(PofoSmartCablePhy& phy,
 }
 
 PofoResult PofoSmartCableFrameServer::receiveBlock(PofoSmartCablePhy& phy,
-                                                    uint8_t* data,
-                                                    size_t capacity,
-                                                    size_t* receivedLength) {
-  if (receivedLength == 0) {
+                                                    uint8_t** payload,
+                                                    size_t* lengthOut) {
+  if (payload == 0 || lengthOut == 0) {
     return PofoResult::FRAME_ERROR;
   }
-  *receivedLength = 0;
+  *payload = 0;
+  *lengthOut = 0;
 
-  PofoResult result = phy.sendByte(0x5A);
+  PofoResult result = phy.sendByte(0x5A); // 'Z'
   if (result != PofoResult::OK) {
     return result;
   }
@@ -116,15 +118,19 @@ PofoResult PofoSmartCableFrameServer::receiveBlock(PofoSmartCablePhy& phy,
 
   const size_t length = static_cast<size_t>(lengthLow) |
       (static_cast<size_t>(lengthHigh) << 8);
-  *receivedLength = length;
-  if (length > capacity || (length != 0 && data == 0)) {
-    return PofoResult::BUFFER_TOO_SMALL;
+  uint8_t* data = 0;
+  if (length != 0) {
+    data = static_cast<uint8_t*>(malloc(length));
+    if (data == 0) {
+      return PofoResult::OUT_OF_MEMORY;
+    }
   }
 
   uint8_t checksum = static_cast<uint8_t>(lengthLow + lengthHigh);
   for (size_t index = 0; index < length; ++index) {
     result = phy.receiveByte(&data[index]);
     if (result != PofoResult::OK) {
+      free(data);
       return result;
     }
     checksum = static_cast<uint8_t>(checksum + data[index]);
@@ -133,16 +139,22 @@ PofoResult PofoSmartCableFrameServer::receiveBlock(PofoSmartCablePhy& phy,
   uint8_t receivedChecksum = 0;
   result = phy.receiveByte(&receivedChecksum);
   if (result != PofoResult::OK) {
+    free(data);
     return result;
   }
   if (static_cast<uint8_t>(checksum + receivedChecksum) != 0) {
+    free(data);
     return PofoResult::CHECKSUM_ERROR;
   }
 
   result = phy.sendByte(static_cast<uint8_t>(0 - checksum));
   if (result != PofoResult::OK) {
+    free(data);
     return result;
   }
+
+  *payload = data;
+  *lengthOut = length;
 
   PofoSmartCableComponentLogger& logger =
       pofoSmartCableLogger("PofoSmartCableFrameServer");
