@@ -1,0 +1,50 @@
+#######################################
+# Syntax Coloring Map for PofoSmartCable
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+PofoSmartCable	KEYWORD1
+PofoSmartCableFrame	KEYWORD1
+PofoSmartCablePhy	KEYWORD1
+PofoSmartCablePhyESP32	KEYWORD1
+PofoFileTransfer	KEYWORD1
+PofoFileTransferList	KEYWORD1
+PofoResult	KEYWORD1
+PofoSmartCableLinkStateCallback	KEYWORD1
+PofoSmartCableProgress	KEYWORD1
+PofoFileTransferProgress	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+online	KEYWORD2
+setLinkStateCallback	KEYWORD2
+setProgressCallback	KEYWORD2
+sendBlock	KEYWORD2
+receiveBlock	KEYWORD2
+releaseBlock	KEYWORD2
+receiveFile	KEYWORD2
+transmitFile	KEYWORD2
+sendPathRequest	KEYWORD2
+waitZ	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+OK	LITERAL1
+OFFLINE	LITERAL1
+TIMEOUT	LITERAL1
+SYNC_ERROR	LITERAL1
+INVALID_ARGUMENT	LITERAL1
+FRAME_ERROR	LITERAL1
+BUFFER_TOO_SMALL	LITERAL1
+OUT_OF_MEMORY	LITERAL1
+CHECKSUM_ERROR	LITERAL1
+FILE_EXISTS	LITERAL1
+REMOTE_ERROR	LITERAL1
+ALREADY_REGISTERED	LITERAL1
