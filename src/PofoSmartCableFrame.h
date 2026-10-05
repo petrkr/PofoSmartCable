@@ -7,7 +7,7 @@
 
 class PofoSmartCablePhy;
 
-class PofoSmartCableFrameServer {
+class PofoSmartCableFrame {
  public:
   PofoResult waitZ(PofoSmartCablePhy& phy);
   PofoResult sendBlock(PofoSmartCablePhy& phy, const uint8_t* data,

@@ -2,7 +2,7 @@
 
 #include "PofoSmartCablePhyESP32.h"
 #include "PofoSmartCableResult.h"
-#include "PofoSmartCableFrameServer.h"
+#include "PofoSmartCableFrame.h"
 
 class PofoSmartCable {
  public:
@@ -27,5 +27,5 @@ class PofoSmartCable {
  private:
   PofoResult syncTick();
   PofoSmartCablePhyESP32 phy_;
-  PofoSmartCableFrameServer serverFrame_;
+  PofoSmartCableFrame frame_;
 };

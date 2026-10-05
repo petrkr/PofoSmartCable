@@ -1,4 +1,4 @@
-#include "PofoSmartCableFrameServer.h"
+#include "PofoSmartCableFrame.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 
 void logHexDump(const char* direction, const uint8_t* data, size_t length) {
   PofoSmartCableComponentLogger& logger =
-      pofoSmartCableLogger("PofoSmartCableFrameServer");
+      pofoSmartCableLogger("PofoSmartCableFrame");
 
   char message[256];
   size_t messageOffset = static_cast<size_t>(
@@ -48,7 +48,7 @@ void logHexDump(const char* direction, const uint8_t* data, size_t length) {
   logger.debugf("%s", message);
 }
 
-PofoResult PofoSmartCableFrameServer::waitZ(PofoSmartCablePhy& phy) {
+PofoResult PofoSmartCableFrame::waitZ(PofoSmartCablePhy& phy) {
   for (;;) {
     uint8_t value = 0;
     PofoResult result = phy.receiveByte(&value);
@@ -65,7 +65,7 @@ PofoResult PofoSmartCableFrameServer::waitZ(PofoSmartCablePhy& phy) {
   }
 }
 
-PofoResult PofoSmartCableFrameServer::sendBlock(PofoSmartCablePhy& phy,
+PofoResult PofoSmartCableFrame::sendBlock(PofoSmartCablePhy& phy,
                                                  const uint8_t* data,
                                                  size_t length) {
   if (data == 0 || length == 0 || length > 0xffffU) {
@@ -74,7 +74,7 @@ PofoResult PofoSmartCableFrameServer::sendBlock(PofoSmartCablePhy& phy,
 
   PofoResult result = waitZ(phy);
   if (result != PofoResult::OK) {
-    pofoSmartCableLogger("PofoSmartCableFrameServer").warnf(
+    pofoSmartCableLogger("PofoSmartCableFrame").warnf(
         "TX wait Z failed: %u", static_cast<unsigned>(result));
     return result;
   }
@@ -115,12 +115,12 @@ PofoResult PofoSmartCableFrameServer::sendBlock(PofoSmartCablePhy& phy,
   uint8_t acknowledgement = 0;
   result = phy.receiveByte(&acknowledgement);
   if (result != PofoResult::OK) {
-    pofoSmartCableLogger("PofoSmartCableFrameServer").warnf(
+    pofoSmartCableLogger("PofoSmartCableFrame").warnf(
         "TX checksum ACK failed: %u", static_cast<unsigned>(result));
     return result;
   }
   if (acknowledgement != checksum) {
-    pofoSmartCableLogger("PofoSmartCableFrameServer").warnf(
+    pofoSmartCableLogger("PofoSmartCableFrame").warnf(
         "TX checksum ACK mismatch: got 0x%02X expected 0x%02X",
         acknowledgement, checksum);
     return PofoResult::CHECKSUM_ERROR;
@@ -130,7 +130,7 @@ PofoResult PofoSmartCableFrameServer::sendBlock(PofoSmartCablePhy& phy,
   return PofoResult::OK;
 }
 
-PofoResult PofoSmartCableFrameServer::receiveBlock(PofoSmartCablePhy& phy,
+PofoResult PofoSmartCableFrame::receiveBlock(PofoSmartCablePhy& phy,
                                                     uint8_t** payload,
                                                     size_t* lengthOut) {
   if (payload == 0 || lengthOut == 0) {

@@ -27,15 +27,15 @@ PofoResult PofoSmartCable::syncTick() {
 }
 
 PofoResult PofoSmartCable::waitZ() {
-  return serverFrame_.waitZ(phy_);
+  return frame_.waitZ(phy_);
 }
 
 PofoResult PofoSmartCable::sendBlock(const uint8_t* data, size_t length) {
-  return serverFrame_.sendBlock(phy_, data, length);
+  return frame_.sendBlock(phy_, data, length);
 }
 
 PofoResult PofoSmartCable::receiveBlock(uint8_t** payload, size_t* length) {
-  return serverFrame_.receiveBlock(phy_, payload, length);
+  return frame_.receiveBlock(phy_, payload, length);
 }
 
 void PofoSmartCable::releaseBlock(uint8_t* payload) {
