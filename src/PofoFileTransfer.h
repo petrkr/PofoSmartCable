@@ -9,6 +9,10 @@
 
 class PofoSmartCable;
 
+// Reports transfer progress after each byte. transferred and total are
+// both in bytes; total is the complete file length known up front.
+typedef void (*PofoFileTransferProgress)(size_t transferred, size_t total);
+
 // Parsed response to the Portfolio server-side LIST request.
 class PofoFileTransferList {
  public:
@@ -36,6 +40,11 @@ class PofoFileTransfer {
  public:
   explicit PofoFileTransfer(PofoSmartCable& cable);
 
+  // Registers a callback invoked after each byte transferred during
+  // receiveFile()/transmitFile(), with bytes transferred so far and the
+  // total file length. Pass 0 to clear it.
+  void setProgressCallback(PofoFileTransferProgress progress);
+
   // path is required, for example "*.*" or "C:\\*.*".
   PofoResult list(const char* path, PofoFileTransferList* response);
 
@@ -56,4 +65,5 @@ class PofoFileTransfer {
   PofoResult sendPathRequest(uint8_t function, const char* path);
 
   PofoSmartCable& cable_;
+  PofoFileTransferProgress progress_ = 0;
 };

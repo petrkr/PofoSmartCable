@@ -30,6 +30,10 @@ PofoResult PofoSmartCable::waitZ() {
   return frame_.waitZ(phy_);
 }
 
+PofoResult PofoSmartCable::setProgressCallback(PofoSmartCableProgress progress) {
+  return frame_.setProgressCallback(progress);
+}
+
 PofoResult PofoSmartCable::sendBlock(const uint8_t* data, size_t length) {
   return frame_.sendBlock(phy_, data, length);
 }

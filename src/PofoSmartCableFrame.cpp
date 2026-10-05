@@ -65,6 +65,15 @@ PofoResult PofoSmartCableFrame::waitZ(PofoSmartCablePhy& phy) {
   }
 }
 
+PofoResult PofoSmartCableFrame::setProgressCallback(
+    PofoSmartCableProgress progress) {
+  if (progress != 0 && progress_ != 0) {
+    return PofoResult::ALREADY_REGISTERED;
+  }
+  progress_ = progress;
+  return PofoResult::OK;
+}
+
 PofoResult PofoSmartCableFrame::sendBlock(PofoSmartCablePhy& phy,
                                                  const uint8_t* data,
                                                  size_t length) {
@@ -104,6 +113,9 @@ PofoResult PofoSmartCableFrame::sendBlock(PofoSmartCablePhy& phy,
     result = phy.sendByte(data[index]);
     if (result != PofoResult::OK) {
       return result;
+    }
+    if (progress_ != 0) {
+      progress_(index + 1, length);
     }
   }
 
@@ -182,6 +194,9 @@ PofoResult PofoSmartCableFrame::receiveBlock(PofoSmartCablePhy& phy,
       return result;
     }
     checksum = static_cast<uint8_t>(checksum + data[index]);
+    if (progress_ != 0) {
+      progress_(index + 1, length);
+    }
   }
 
   uint8_t receivedChecksum = 0;

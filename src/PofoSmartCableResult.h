@@ -14,4 +14,5 @@ enum class PofoResult : uint8_t {
   CHECKSUM_ERROR,
   FILE_EXISTS,
   REMOTE_ERROR,
+  ALREADY_REGISTERED,
 };

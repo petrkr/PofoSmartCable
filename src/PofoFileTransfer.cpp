@@ -12,6 +12,21 @@ namespace {
 
 const uint32_t kTransmitFinishDelayUs = 50000;
 
+// Adapts PofoSmartCable's per-block byte progress to PofoFileTransfer's
+// per-file progress. Set by receiveFile()/transmitFile() before each
+// cable_.sendBlock()/receiveBlock() call; read by onBlockProgress(), which
+// cable_.setProgressCallback() invokes from inside that call. A free
+// function (not a method) because PofoSmartCableProgress is a plain
+// function pointer - static state is fine since only one PofoFileTransfer
+// transfer runs at a time.
+PofoFileTransferProgress gUserProgress = 0;
+size_t gOffsetBeforeBlock = 0;
+size_t gFileLength = 0;
+
+void onBlockProgress(size_t blockTransferred, size_t) {
+  gUserProgress(gOffsetBeforeBlock + blockTransferred, gFileLength);
+}
+
 bool isLeapYear(unsigned year) {
   return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
 }
@@ -189,6 +204,10 @@ PofoResult PofoFileTransferList::take(uint8_t* payload, size_t length) {
 PofoFileTransfer::PofoFileTransfer(PofoSmartCable& cable) : cable_(cable) {
 }
 
+void PofoFileTransfer::setProgressCallback(PofoFileTransferProgress progress) {
+  progress_ = progress;
+}
+
 PofoResult PofoFileTransfer::sendPathRequest(uint8_t function,
                                              const char* path) {
   if (path == 0) {
@@ -259,21 +278,39 @@ PofoResult PofoFileTransfer::receiveFile(const char* path, Stream& output) {
       (static_cast<size_t>(control[9]) << 16);
   PofoSmartCable::releaseBlock(control);
 
+  if (progress_ != 0) {
+    result = cable_.setProgressCallback(onBlockProgress);
+    if (result != PofoResult::OK) {
+      return result;
+    }
+    gUserProgress = progress_;
+    gFileLength = fileLength;
+  }
+
   size_t offset = 0;
   while (offset < fileLength) {
     uint8_t* block = 0;
     size_t blockLength = 0;
+    gOffsetBeforeBlock = offset;
     result = cable_.receiveBlock(&block, &blockLength);
     if (result != PofoResult::OK) {
-      return result;
+      break;
     }
     if (blockLength == 0 || blockLength > fileLength - offset) {
       PofoSmartCable::releaseBlock(block);
-      return PofoResult::FRAME_ERROR;
+      result = PofoResult::FRAME_ERROR;
+      break;
     }
     output.write(block, blockLength);
     offset += blockLength;
     PofoSmartCable::releaseBlock(block);
+  }
+
+  if (progress_ != 0) {
+    cable_.setProgressCallback(0);
+  }
+  if (result != PofoResult::OK) {
+    return result;
   }
 
   const uint8_t finish[] = {0x20, 0x00, 0x03};
@@ -353,6 +390,16 @@ PofoResult PofoFileTransfer::transmitFile(const char* path, Stream& input,
     return PofoResult::OUT_OF_MEMORY;
   }
 
+  if (progress_ != 0) {
+    result = cable_.setProgressCallback(onBlockProgress);
+    if (result != PofoResult::OK) {
+      free(chunk);
+      return result;
+    }
+    gUserProgress = progress_;
+    gFileLength = length;
+  }
+
   size_t offset = 0;
   while (offset < length) {
     size_t chunkLength = length - offset;
@@ -360,21 +407,28 @@ PofoResult PofoFileTransfer::transmitFile(const char* path, Stream& input,
       chunkLength = blockSize;
     }
     if (input.readBytes(chunk, chunkLength) != chunkLength) {
-      free(chunk);
-      return PofoResult::FRAME_ERROR;
+      result = PofoResult::FRAME_ERROR;
+      break;
     }
+    gOffsetBeforeBlock = offset;
     result = cable_.sendBlock(chunk, chunkLength);
     if (result != PofoResult::OK) {
       pofoSmartCableLogger("PofoFileTransfer").warnf(
           "Transmit payload failed at %lu/%lu: %u",
           static_cast<unsigned long>(offset),
           static_cast<unsigned long>(length), static_cast<unsigned>(result));
-      free(chunk);
-      return result;
+      break;
     }
     offset += chunkLength;
   }
   free(chunk);
+
+  if (progress_ != 0) {
+    cable_.setProgressCallback(0);
+  }
+  if (result != PofoResult::OK) {
+    return result;
+  }
 
   const uint32_t finalStatusStarted = micros();
   delayMicroseconds(kTransmitFinishDelayUs);
