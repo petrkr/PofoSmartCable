@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <time.h>
 
 #include "PofoSmartCableResult.h"
 
@@ -60,6 +61,13 @@ class PofoFileTransfer {
   // Requests one Portfolio file and receives its complete content.
   // path is required, for example "C:\\TEST.TXT".
   PofoResult receiveFile(const char* path, PofoFileTransferFile* response);
+
+  // Sends one file to Portfolio. path must fit the 78-character reference
+  // transmit-init path field. Set overwrite when the destination exists.
+  // timestamp is Unix time; zero uses the current system time.
+  PofoResult transmitFile(const char* path, const uint8_t* data,
+                          size_t length, bool overwrite,
+                          time_t timestamp = 0);
 
  private:
   PofoResult sendPathRequest(uint8_t function, const char* path);
