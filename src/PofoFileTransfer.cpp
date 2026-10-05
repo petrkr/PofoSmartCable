@@ -410,6 +410,8 @@ PofoResult PofoFileTransfer::transmitFile(const char* path,
     offset += chunkLength;
   }
 
+  delayMicroseconds(50000);
+
   control = 0;
   controlLength = 0;
   result = cable_.receiveBlock(&control, &controlLength);
