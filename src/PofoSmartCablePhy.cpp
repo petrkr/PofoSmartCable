@@ -150,11 +150,11 @@ void PofoSmartCablePhy::reportLinkState(bool isOnline) const {
   PofoSmartCableComponentLogger& logger =
       pofoSmartCableLogger("PofoSmartCablePhy");
   if (isOnline) {
-    logger.infof("CLKIN active: age=%lu us, edges=%lu",
+    logger.debugf("CLKIN active: age=%lu us, edges=%lu",
                  static_cast<unsigned long>(age),
                  static_cast<unsigned long>(clkChangeCount_));
   } else {
-    logger.warnf("CLKIN inactive: age=%lu us, edges=%lu",
+    logger.debugf("CLKIN inactive: age=%lu us, edges=%lu",
                  static_cast<unsigned long>(age),
                  static_cast<unsigned long>(clkChangeCount_));
   }
