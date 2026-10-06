@@ -8,6 +8,7 @@ PofoSmartCablePhy::PofoSmartCablePhy()
       initialized_(false),
       lastReportedOnline_(false),
       hasReportedLinkState_(false),
+      offlineEdgeCount_(0),
       linkStateCallback_(0) {}
 
 PofoSmartCablePhy::~PofoSmartCablePhy() {}
@@ -24,8 +25,24 @@ bool PofoSmartCablePhy::begin(int clkIn, int dataIn, int clkOut, int dataOut) {
 bool PofoSmartCablePhy::online() const {
   const uint32_t lastChange = lastClkChangeUs_;
   const uint32_t now = nowMicros();
-  const bool isOnline = initialized_ && lastChange != 0 &&
+  const bool rawOnline = initialized_ && lastChange != 0 &&
       static_cast<uint32_t>(now - lastChange) <= kLinkTimeoutMs * 1000U;
+
+  bool isOnline;
+  if (!rawOnline) {
+    offlineEdgeCount_ = clkChangeCount_;
+    isOnline = false;
+  } else if (hasReportedLinkState_ && lastReportedOnline_) {
+    // Already confirmed online; edges keep arriving as expected.
+    isOnline = true;
+  } else {
+    // Transitioning from offline (or never reported): a single isolated
+    // CLKIN glitch must not be reported as the link coming online, so
+    // require at least kOnlineMinEdges edges since it was last offline.
+    isOnline = static_cast<uint32_t>(clkChangeCount_ - offlineEdgeCount_) >=
+        kOnlineMinEdges;
+  }
+
   reportLinkState(isOnline);
   return isOnline;
 }
@@ -125,6 +142,7 @@ void PofoSmartCablePhy::reset() {
   lastClkChangeUs_ = 0;
   clkChangeCount_ = 0;
   hasReportedLinkState_ = false;
+  offlineEdgeCount_ = 0;
   writeClock(false);
   writeData(false);
 }

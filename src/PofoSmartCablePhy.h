@@ -43,6 +43,11 @@ class PofoSmartCablePhy {
   static const uint32_t kLinkTimeoutMs = 300;
   static const uint32_t kHandshakeTimeoutUs = 2000000;
 
+  // A single isolated CLKIN edge (glitch) must not be reported as a link
+  // coming online; require at least this many edges since the link was last
+  // offline before reporting online.
+  static const uint32_t kOnlineMinEdges = 2;
+
   PofoResult waitClock(bool high);
   void reportLinkState(bool isOnline) const;
 
@@ -51,5 +56,6 @@ class PofoSmartCablePhy {
   bool initialized_;
   mutable bool lastReportedOnline_;
   mutable bool hasReportedLinkState_;
+  mutable uint32_t offlineEdgeCount_;
   PofoSmartCableLinkStateCallback linkStateCallback_;
 };
