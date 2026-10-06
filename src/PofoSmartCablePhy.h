@@ -40,7 +40,7 @@ class PofoSmartCablePhy {
   virtual void idle() = 0;
 
  private:
-  static const uint32_t kLinkTimeoutMs = 300;
+  static const uint32_t kLinkTimeoutMs = 600;
   static const uint32_t kHandshakeTimeoutUs = 2000000;
 
   // A single isolated CLKIN edge (glitch) must not be reported as a link
