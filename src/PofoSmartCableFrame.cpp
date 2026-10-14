@@ -88,7 +88,6 @@ PofoResult PofoSmartCableFrame::sendBlock(PofoSmartCablePhy& phy,
     return result;
   }
 
-  phy.delayMicros(50000);
   result = phy.sendByte(0xA5);
   if (result != PofoResult::OK) {
     return result;
