@@ -268,9 +268,13 @@ PofoResult PofoFileTransfer::receiveFile(const char* path, Stream& output) {
   if (result != PofoResult::OK) {
     return result;
   }
-  if (controlLength < 10 || control[0] != 0x20) {
+  if (controlLength < 10) {
     PofoSmartCable::releaseBlock(control);
     return PofoResult::FRAME_ERROR;
+  }
+  if (control[0] != 0x20) {
+    PofoSmartCable::releaseBlock(control);
+    return PofoResult::REMOTE_ERROR;
   }
 
   const size_t fileLength = static_cast<size_t>(control[7]) |
