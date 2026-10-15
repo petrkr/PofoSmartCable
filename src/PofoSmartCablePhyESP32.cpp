@@ -2,6 +2,7 @@
 
 #include <driver/gpio.h>
 #include <esp_timer.h>
+#include <esp_task_wdt.h>
 
 PofoSmartCablePhyESP32::PofoSmartCablePhyESP32()
     : clkIn_(-1), dataIn_(-1), clkOut_(-1), dataOut_(-1) {}
@@ -57,6 +58,9 @@ void PofoSmartCablePhyESP32::platformDelayMicros(uint32_t microseconds) {
 
 void PofoSmartCablePhyESP32::idle() {
   yield();
+  if (esp_task_wdt_status(NULL) == ESP_OK) {
+    esp_task_wdt_reset();
+  }
 }
 
 void IRAM_ATTR PofoSmartCablePhyESP32::onClkInChange(void* argument) {
